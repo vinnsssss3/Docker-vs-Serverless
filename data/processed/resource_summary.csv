@@ -1,0 +1,9 @@
+arch,scenario,samples,cpu_mean_pct,cpu_p95_pct,rss_mean_mb,rss_p95_mb
+docker,cold_warm_probe,56,0.0,0.0,15.21,15.21
+docker,light_load,16,5.04,7.78,14.4,14.4
+docker,medium_load,22,47.32,68.28,14.85,14.97
+docker,heavy_load,20,70.8,75.21,14.56,14.57
+serverless,cold_warm_probe,51,0.0,0.0,14.49,14.56
+serverless,light_load,15,5.79,6.2,14.41,14.41
+serverless,medium_load,21,42.11,49.9,14.95,15.02
+serverless,heavy_load,19,61.41,74.9,14.73,14.73

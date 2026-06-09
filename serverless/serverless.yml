@@ -1,0 +1,40 @@
+# serverless.yml — Serverless Framework configuration for the FaaS target.
+# Memory size is matched to the Docker container's memory cap (512 MB) so
+# both architectures get equivalent compute budget (Methodology 3.4).
+
+service: docker-vs-faas-benchmark
+
+frameworkVersion: "^3.38.0"
+
+provider:
+  name: aws
+  runtime: python3.11
+  region: ap-southeast-1            # Singapore — closest AWS region to Jakarta
+  memorySize: 512                   # match Docker container memory limit
+  timeout: 30
+  architecture: x86_64
+  logRetentionInDays: 7
+  environment:
+    PYTHONUNBUFFERED: "1"
+
+package:
+  individually: false
+  patterns:
+    - "!**/__pycache__/**"
+    - "!**/*.pyc"
+    - "!../docker/**"
+    - "!../benchmark/**"
+    - "!../analysis/**"
+    - "!../data/**"
+    - "!../docs/**"
+    - "core/**"
+    - "serverless/handler.py"
+
+functions:
+  invoke:
+    handler: serverless/handler.lambda_handler
+    description: "Benchmark FaaS target — identical core to the Docker app"
+    events:
+      - httpApi:
+          path: /invoke
+          method: post

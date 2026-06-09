@@ -1,0 +1,3 @@
+# The core workload uses only the standard library, so the deployment
+# package itself is dependency-free. This file exists for reproducibility
+# (a researcher reading the repo can confirm "no hidden deps").

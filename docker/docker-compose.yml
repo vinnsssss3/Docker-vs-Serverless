@@ -1,0 +1,22 @@
+# docker-compose.yml — brings up the always-on container locally.
+# Used both for ad-hoc testing and as the target for the load-test scripts.
+
+version: "3.9"
+
+services:
+  docker-app:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: docker-vs-faas/docker-app:latest
+    container_name: docker-app
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    # Memory and CPU caps are set to match the serverless function's
+    # allocation so the comparison is fair (Methodology 3.4).
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M

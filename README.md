@@ -1,17 +1,62 @@
-# Docker vs Serverless FaaS — Benchmark Repository
+# Docker vs Serverless FaaS — Latency & Resource Benchmark
 
-Companion code, data, and reproduction artifacts for the paper
-**"Comparative Analysis of Latency and Resource Utilization in Docker
-and Serverless FaaS Architectures."**
+A reproducible benchmark that runs **byte-identical Python code** under an
+always-on (Docker-style) lifecycle and a cold/warm-start (FaaS-style)
+lifecycle, then measures where each one wins.
 
-The goal of this repository is to make every claim in the *Experiment
-Results* and *Conclusion* chapters independently verifiable. Anyone who
-clones it should be able to:
+> 📄 **Paper:** *Comparative Analysis of Latency and Resource Utilization in
+> Docker and Serverless FaaS Architectures* — **presented at EECSI 2026**
+> (IEEE-sponsored, Yogyakarta, 2–3 Sept 2026). First author: Marvino Maruli.
 
-1. re-run the local controlled benchmark (no cloud account required), or
-2. deploy the same source code to real Docker + AWS Lambda and re-run
-   the experiment against real infrastructure, and
-3. reproduce every plot in the paper from the resulting raw CSVs.
+![Cold vs warm vs always-on latency](analysis/plots/cold_vs_warm.png)
+
+## Key results
+
+| Finding | Number |
+|---|---|
+| Warm-path latency gap (median, Docker vs warm FaaS) | **0.01–1.30 ms** across light / medium / heavy workloads — inside the noise |
+| Cold-start overhead | **~64–82 ms**, roughly constant regardless of workload |
+| Relative cost of that overhead | **+2,328%** on a ~3 ms request, **+74%** on an ~86 ms request |
+| Idle memory | FaaS releases memory between bursts → **~57% less cumulative memory-time** under sparse traffic |
+| Sample | 430 latency observations, 220 CPU/RSS samples (psutil @ 4 Hz), Python 3.13.3, 512 MB cap |
+
+**Takeaway:** cold-start cost belongs to the *workload*, not just the
+architecture. Short, latency-sensitive requests on sparse traffic are where
+serverless hurts; long requests or bursty/idle traffic are where it wins.
+
+## The hardest part
+
+Making the comparison *fair*. A naive "deploy to Lambda, deploy to a VM,
+compare" mixes in network hops, API Gateway, TLS and noisy neighbours, so any
+difference could be anything. I isolated the one variable the research
+question is about — **process lifecycle** — by loading the same
+`core/workload.py` module in both paths, pinning runtime and memory, and
+separating cold from warm requests with a probe scenario that injects idle
+gaps at a known cadence. That is why the warm-path numbers can be compared
+at sub-millisecond resolution.
+
+## What this is *not* (read before citing)
+
+- The published numbers come from the **local, controlled benchmark**: both
+  architectures are modelled as process lifecycles on one machine, not measured
+  on AWS. Real Lambda cold starts are typically 200–500 ms, so treat 64–82 ms
+  as a **lower bound**.
+- Only **5 forced cold invocations** in the probe scenario (plus 1 per load
+  scenario) — enough to show the overhead, too few to characterise its tail.
+- Workloads are CPU-bound with no I/O.
+- The Docker and AWS Lambda deployment targets in `docker/` and `serverless/`
+  are provided so the experiment *can* be re-run on real infrastructure;
+  that run is future work.
+
+## What I'd do differently
+
+1. Run the same scenarios on real AWS Lambda vs ECS/Fargate and report
+   cost per million requests alongside latency.
+2. Collect 100+ cold starts per workload and report p95/p99 of cold starts,
+   not just the median.
+3. Add I/O-bound and memory-heavy workloads, where cold starts behave differently.
+4. Commit experiment runs incrementally so the history shows how the
+   methodology evolved.
 
 ---
 
@@ -160,5 +205,14 @@ experimental data is released under CC BY 4.0.
 
 ## Citation
 
-If you use this repository in your own work, please cite the paper as
-listed in the *Open Data* section of the manuscript.
+Proceedings are pending; until a DOI is available, please cite as:
+
+```bibtex
+@inproceedings{maruli2026dockerfaas,
+  title     = {Comparative Analysis of Latency and Resource Utilization in Docker and Serverless FaaS Architectures},
+  author    = {Maruli, Marvino and Panjaitan, Moses Alvin Marcello and Gunawan, Alexander Agung Santoso and Pradana, Rilo Chandra},
+  booktitle = {International Conference on Electrical Engineering, Computer Science and Informatics (EECSI)},
+  year      = {2026},
+  note      = {Presented September 2026, Yogyakarta, Indonesia}
+}
+```

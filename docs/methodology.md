@@ -35,7 +35,7 @@ consumes either dataset.
 | Serverless (cold/warm) | A fresh `python` interpreter is spawned on every cold invocation; module import is included in the measured latency. A warm subprocess is cached for an 8 s window. | Interpreter startup + import is exactly the work AWS Lambda performs on a cold start in addition to the workload itself. |
 
 The local cold-start cost is smaller in absolute terms than what AWS
-Lambda exhibits (~20 ms here vs 200–500 ms in production), because
+Lambda exhibits (~64–82 ms here vs 200–500 ms in production), because
 the benchmark omits container provisioning and code-package download.
 What it preserves is the *direction* and *qualitative shape* of the
 difference — and the relative gap shrinks under heavier workloads,
